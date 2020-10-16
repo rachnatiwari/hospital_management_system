@@ -80,6 +80,10 @@ var UserSchema = new mongoose.Schema({
             type : String,
             default : null
         },
+        phone : {
+            type : Number,
+            default : null
+        },
         age : {
             type : String,
             default : null
