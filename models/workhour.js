@@ -3,8 +3,8 @@ const Schema = mongoose.Schema;
 
 const WorkhourSchema = Schema(
     {
-        checkIn = String,
-        checOut = String
+        checkIn : String,
+        checOut : String
     }
 );
 

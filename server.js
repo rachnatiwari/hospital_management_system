@@ -5,9 +5,12 @@ var express               = require("express"),
     LocalStrategy         = require("passport-local"),
     passportLocalMongoose = require("passport-local-mongoose"),
     Patient               = require("./models/patients"),
-    Staff                 = require("./models/staff");
+    Staff                 = require("./models/staff"),
+    Inventory             = require("./models/inventory"),
+    Bed                   = require("./models/bed");
 
 //SETTING UP DATABASE
+// var localmongodburl = "mongodb://localhost:27017/hostipaldb"
 var mongodburl = "mongodb+srv://covid_cluster_user:randomlygenerated@covidpatients.cf3et.mongodb.net/covidPatients?retryWrites=true&w=majority"
 mongoose.connect(mongodburl, { useNewUrlParser: true, useUnifiedTopology: true });
 var app = express();
@@ -47,7 +50,7 @@ app.get("/login", function(req,res){
 
 app.post("/login", passport.authenticate("local", {
     successRedirect: "/api/currentuser",
-    failureRedirect: "/patients/login"
+    failureRedirect: "/login"
 }) ,function(req, res){
 });
 
@@ -90,7 +93,7 @@ app.get("/signup/staff", function(req,res){
 
 app.post("/signup/staff",function(req,res){
     Staff.register(new Staff({
-            username : req.body.username , 
+            username : req.body.username, 
             name : req.body.name,
             dob : req.body.dob,
             age : req.body.age,
@@ -100,7 +103,7 @@ app.post("/signup/staff",function(req,res){
             joinedOn: req.body.joinedon,
             role : req.body.role,
             department : req.body.department,
-        }),req.body.password , function(err,patient){
+        }),req.body.password , function(err,staff){
         if(err){
             console.log(err);
             res.redirect('/signup/staff');
@@ -116,7 +119,7 @@ app.get("/api/currentuser", isLoggedIn, function(req,res){
         if(err){
             Staff.findById(req.user._id, function(err, staff){
                 if(err){
-                    res.redirect("/login");
+                    res.send("No current user");
                 }else{
                     res.send(staff);
                 }
@@ -126,6 +129,191 @@ app.get("/api/currentuser", isLoggedIn, function(req,res){
         }
     });
 });
+//-------------- Uncomment to create an instance of beds ------------------
+// app.get("/createbeds", function(req,res){
+//     Bed.create({}, function(err,bed){
+//         if(err)
+//             console.log(err)
+//         else
+//             res.redirect("/api/bedoccupancy");
+//     })
+// })
+
+app.get("/api/bedoccupancy", function(req,res){
+    Bed.find({},function(err,beds){
+        if(err){
+            res.send("cant show bed");
+        }else{
+            res.send(beds);
+        }
+    })
+})
+
+//-------------- Uncomment to create an instance of inventory ------------------
+// app.get("/createinventory", function(req,res){
+//     Inventory.create({}, function(err,items){
+//         if(err)
+//             console.log(err)
+//         else
+//             res.redirect("/api/inventory");
+//     })
+// })
+
+app.get("/api/inventory", function(req,res){
+    Inventory.find({},function(err,items){
+        if(err){
+            res.redirect("/login");
+        }else{
+            res.send(items);
+        }
+    })
+});
+
+app.get("/inventory/add", function(req,res){
+    Inventory.find({},function(err,items){
+        if(err){
+            res.send("cant add to inventory");
+        }else{
+            res.render("edit_inven",{items:items, act:"add"});
+        }
+    })
+})
+
+app.post("/inventory/add", function(req,res){
+    Inventory.find({},function(err,items){
+        if(err){
+            res.send("something wrong");
+        }else{
+    if(req.body.item=="gloves"){
+        Inventory.findOneAndUpdate({} ,{ "gloves" : items[0].gloves+Number(req.body.value)},function(err,result){
+            if(err){
+                console.log(err)
+            }else{
+                res.redirect("/api/inventory");
+        }
+        })
+    }else if(req.body.item=="testingkit"){
+        Inventory.findOneAndUpdate({} ,{ "testingkit" : items[0].testingkit+Number(req.body.value)},function(err,result){
+            if(err){
+                console.log(err)
+            }else{
+                res.redirect("/api/inventory");
+        }
+        })
+    }else if(req.body.item=="syringes"){
+        Inventory.findOneAndUpdate({} ,{ "syringes" : items[0].syringes+Number(req.body.value)},function(err,result){
+            if(err){
+                console.log(err)
+            }else{
+                res.redirect("/api/inventory");
+        }
+        })
+    }else if(req.body.item=="salinebottles"){
+        Inventory.findOneAndUpdate({} ,{ "salinebottles" : items[0].salinebottles+Number(req.body.value)},function(err,result){
+            if(err){
+                console.log(err)
+            }else{
+                res.redirect("/api/inventory");
+        }
+        })
+    }else if(req.body.item=="masks"){
+        Inventory.findOneAndUpdate({} ,{ "masks" : items[0].masks+Number(req.body.value)},function(err,result){
+            if(err){
+                console.log(err)
+            }else{
+                res.redirect("/api/inventory");
+        }
+        })
+    }else{
+        Inventory.findOneAndUpdate({} ,{ "ppekits" : items[0].ppekits+Number(req.body.value)},function(err,result){
+            if(err){
+                console.log(err)
+            }else{
+                res.redirect("/api/inventory");
+        }
+        })
+    }
+    }
+    })
+})
+
+app.get("/inventory/remove", function(req,res){
+    Inventory.find({},function(err,items){
+        if(err){
+            res.send("cant remove inventory");
+        }else{
+            res.render("edit_inven",{items:items, act:"delete"});
+        }
+    })
+})
+
+app.post("/inventory/remove", function(req,res){
+    Inventory.find({},function(err,items){
+        if(err){
+            res.send("something wrong");
+        }else{
+    if(req.body.item=="gloves"){
+        Inventory.findOneAndUpdate({} ,{ "gloves" : items[0].gloves-Number(req.body.value)},function(err,result){
+            if(err){
+                console.log(err)
+            }else{
+                res.redirect("/api/inventory");
+        }
+        })
+    }else if(req.body.item=="testingkit"){
+        Inventory.findOneAndUpdate({} ,{ "testingkit" : items[0].testingkit-Number(req.body.value)},function(err,result){
+            if(err){
+                console.log(err)
+            }else{
+                res.redirect("/api/inventory");
+        }
+        })
+    }else if(req.body.item=="syringes"){
+        Inventory.findOneAndUpdate({} ,{ "syringes" : items[0].syringes-Number(req.body.value)},function(err,result){
+            if(err){
+                console.log(err)
+            }else{
+                res.redirect("/api/inventory");
+        }
+        })
+    }else if(req.body.item=="salinebottles"){
+        Inventory.findOneAndUpdate({} ,{ "salinebottles" : items[0].salinebottles-Number(req.body.value)},function(err,result){
+            if(err){
+                console.log(err)
+            }else{
+                res.redirect("/api/inventory");
+        }
+        })
+    }else if(req.body.item=="masks"){
+        Inventory.findOneAndUpdate({} ,{ "masks" : items[0].masks-Number(req.body.value)},function(err,result){
+            if(err){
+                console.log(err)
+            }else{
+                res.redirect("/api/inventory");
+        }
+        })
+    }else{
+        Inventory.findOneAndUpdate({} ,{ "ppekits" : items[0].ppekits-Number(req.body.value)},function(err,result){
+            if(err){
+                console.log(err)
+            }else{
+                res.redirect("/api/inventory");
+        }
+        })
+    }
+    }
+    })
+})
+
+app.get("/inventory", function(req,res){
+    Inventory.find({},function(err,items){
+        if(err){
+            res.redirect("/login");
+        }else{
+            res.render("invendisplay",{items:items});
+        }
+    })
+})
 
 app.get("/logout" , function(req,res){
     req.logout();

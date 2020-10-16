@@ -33,6 +33,6 @@ const StaffSchema = Schema(
     }
 );
 
-PatientSchema.plugin(passportLocalMongoose);
+StaffSchema.plugin(passportLocalMongoose);
 
 module.exports = mongoose.model("Staff", StaffSchema);

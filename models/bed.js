@@ -4,14 +4,32 @@ const Schema = mongoose.Schema;
 const BedSchema = Schema(
     {
         occupied : {
-            covid : 0,
-            noncovid : 0,
-            icu : 0
+            covid : {
+                type : Number,
+                default : 0
+            },
+            noncovid : {
+                type : Number,
+                default : 0
+            },
+            icu : {
+                type : Number,
+                default : 0
+            }
         },
         available : {
-            covid : 50,
-            noncovid : 30,
-            icu : 20 
+            covid : {
+                type : Number,
+                default : 50
+            },
+            noncovid : {
+                type : Number,
+                default : 30
+            },
+            icu : {
+                type : Number,
+                default : 20
+            }
         }
     }
 );
