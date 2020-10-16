@@ -1,10 +1,7 @@
 var mongoose = require("mongoose");
 var passportLocalMongoose = require("passport-local-mongoose");
-// var Task = require("../models/tasks");
-// var Archive = require("../models/archives");
-// var Patienthistory = require("../models/patienthistory");
-var Test = require("../models/test");
-var Patienttreatment = require("../models/patienttreatment");
+var Test = require("./models/test");
+var Patienttreatment = require("./models/patienttreatment");
 
 var PatientSchema = new mongoose.Schema({
     name : String,

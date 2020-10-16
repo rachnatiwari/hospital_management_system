@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 var passportLocalMongoose = require("passport-local-mongoose");
-var Workhour = require("../models/workhour");
+var Workhour = require("./models/workhour");
 
 const StaffSchema = Schema(
     {

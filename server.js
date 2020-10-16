@@ -4,8 +4,8 @@ var express               = require("express"),
     bodyParser            = require("body-parser"),
     LocalStrategy         = require("passport-local"),
     passportLocalMongoose = require("passport-local-mongoose"),
-    Patient               = require("./models/patients"),
-    Staff                 = require("./models/staff"),
+    User                  = require("./models/user");
+const user = require("./models/user");
     Inventory             = require("./models/inventory"),
     Bed                   = require("./models/bed");
 
@@ -28,17 +28,16 @@ app.use(require("express-session")({
 app.use(passport.initialize());
 app.use(passport.session());
 
-passport.use(new LocalStrategy(Patient.authenticate()));
-passport.serializeUser(Patient.serializeUser());
-passport.deserializeUser(Patient.deserializeUser());
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 // Passing in the current user in every page
-// app.use(function(req, res, next){
-//     res.locals.currentPatient = req.patient;
-//     next();
-// });
+app.use(function(req, res, next){
+    res.locals.currentUser = req.user;
+    next();
+});
 
-var currentPatient_id;
 // Routes setup
 app.get("/", function(req,res){
     res.redirect("/login");
@@ -60,11 +59,14 @@ app.get("/signup/patients", function(req,res){
 })
 
 app.post("/signup/patients",function(req,res){
-    Patient.register(new Patient({
-            username : req.body.username , 
+    var newuser = {
+        username : req.body.username,
+        isPatient : true,
+        forPatient : { 
             name : req.body.name,
             dob : req.body.dob,
             age : req.body.age,
+            address : req.body.address,
             gender : req.body.gender,
             bloodgroup : req.body.blood,
             phone : req.body.mobile,
@@ -76,10 +78,12 @@ app.post("/signup/patients",function(req,res){
             },
             allergies : req.body.allergy,
             history : req.body.patienthistory,
-        }),req.body.password , function(err,patient){
+        }
+    }
+    User.register(new User(newuser),req.body.password , function(err,patient){
         if(err){
             console.log(err);
-            res.redirect('/signup/patients');
+            res.send("Some Error");
         }
         passport.authenticate('local')(req,res,function(){
             res.redirect("/api/currentuser");
@@ -92,8 +96,10 @@ app.get("/signup/staff", function(req,res){
 });
 
 app.post("/signup/staff",function(req,res){
-    Staff.register(new Staff({
-            username : req.body.username, 
+    var newUser = {
+        username : req.body.username,
+        isStaff : true,
+        forStaff : {
             name : req.body.name,
             dob : req.body.dob,
             age : req.body.age,
@@ -103,7 +109,9 @@ app.post("/signup/staff",function(req,res){
             joinedOn: req.body.joinedon,
             role : req.body.role,
             department : req.body.department,
-        }),req.body.password , function(err,staff){
+        } 
+    }
+    User.register(new User(newUser),req.body.password , function(err,staff){
         if(err){
             console.log(err);
             res.redirect('/signup/staff');
@@ -115,17 +123,11 @@ app.post("/signup/staff",function(req,res){
 });
 
 app.get("/api/currentuser", isLoggedIn, function(req,res){
-    Patient.findById(req.user._id, function(err, patient){
+    User.findById(req.user._id, function(err, user){
         if(err){
-            Staff.findById(req.user._id, function(err, staff){
-                if(err){
-                    res.send("No current user");
-                }else{
-                    res.send(staff);
-                }
-            })
+            res.send("No current user");
         } else{
-            res.send(patient);
+            res.send(user);
         }
     });
 });
